@@ -9,7 +9,7 @@ FROM debian:bookworm-slim
 WORKDIR /app
 COPY --from=builder /app/server ./server
 COPY index.html style.css script.js ./
-COPY images ./images
+COPY *.jpg ./images/
 ENV PORT=10000
 EXPOSE 10000
 CMD ["./server"]
