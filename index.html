@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartServe | Canteen Order Management</title>
+  <meta name="description" content="SmartServe - Your Campus. Your Cravings. One Smart Order.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ============ NAVIGATION BAR ============ -->
+  <header class="navbar">
+    <div class="nav-inner">
+      <a href="#home" class="logo">Smart<span>Serve</span></a>
+
+      <nav class="nav-links" id="navLinks">
+        <a href="#home">Home</a>
+        <a href="#menu">Menu</a>
+        <a href="#queueBoard">Token Board</a>
+        <a href="#track">Track Order</a>
+        <a href="#admin">Admin</a>
+      </nav>
+
+      <div class="nav-right">
+        <button class="cart-btn" id="cartBtn">
+          Cart <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="hamburger" id="hamburgerBtn" aria-label="Menu">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- warning shown when the C server is not running -->
+  <div class="server-error" id="serverError" hidden>
+    Cannot reach the C server. Start <b>server.exe</b> in the SmartServe folder, then press Refresh.
+    <button onclick="location.reload()">Refresh</button>
+  </div>
+
+  <!-- ============ HERO SECTION ============ -->
+  <section class="hero" id="home">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-kicker">CAMPUS CANTEEN &middot; POWERED BY A C QUEUE</p>
+      <h1>SmartServe</h1>
+      <p class="tagline">Your Campus. Your Cravings. One Smart Order.</p>
+      <p class="hero-sub">Skip the line. Order from your seat, get a token, and watch your order move through the FIFO queue in real time.</p>
+
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search for dosa, biryani, coffee...">
+        <button id="searchBtn">Search</button>
+      </div>
+
+      <div class="hero-chips">
+        <span>11 Food Items</span>
+        <span>Orders from ₹50</span>
+        <span>Live Queue Status</span>
+      </div>
+
+      <div class="hero-actions">
+        <a href="#menu" class="btn btn-primary">Order Now</a>
+        <a href="#queueBoard" class="btn btn-ghost">See Token Board</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MENU SECTION ============ -->
+  <section class="section" id="menu">
+    <div class="section-head">
+      <h2>Today&rsquo;s Menu</h2>
+      <p>Freshly prepared in our campus canteen kitchen</p>
+    </div>
+
+    <!-- category filters -->
+    <div class="filters" id="categoryFilters">
+      <button class="pill active" data-category="All">All</button>
+      <button class="pill" data-category="Breakfast">Breakfast</button>
+      <button class="pill" data-category="South Indian">South Indian</button>
+      <button class="pill" data-category="Main Course">Main Course</button>
+      <button class="pill" data-category="Snacks">Snacks</button>
+      <button class="pill" data-category="Beverages">Beverages</button>
+    </div>
+
+    <!-- budget filter -->
+    <div class="filters budget" id="budgetFilters">
+      <span class="filter-label">Budget:</span>
+      <button class="pill active" data-budget="0">Any</button>
+      <button class="pill" data-budget="50">&le; ₹50</button>
+      <button class="pill" data-budget="100">&le; ₹100</button>
+      <button class="pill" data-budget="150">&le; ₹150</button>
+    </div>
+
+    <div class="food-grid" id="foodGrid">
+      <!-- food cards are created by script.js -->
+    </div>
+
+    <p class="empty-msg" id="emptyMsg" hidden>No food item matches your search.</p>
+
+    <!-- rule based combo suggestion -->
+    <div class="combo-banner" id="comboBanner" hidden>
+      <div>
+        <h4>Combo Suggestion</h4>
+        <p id="comboText">Add Fresh Lime Juice with your snack and save ₹15!</p>
+      </div>
+      <button class="btn btn-small" id="comboAddBtn">Add Combo Drink</button>
+    </div>
+  </section>
+
+  <!-- ============ FIFO EXPLANATION ============ -->
+  <section class="section fifo-section">
+    <div class="section-head">
+      <h2>How the Queue Works (FIFO)</h2>
+      <p>FIFO = First In, First Out. The first order received is the first order prepared.</p>
+    </div>
+
+    <div class="fifo-lane">
+      <div class="fifo-card">
+        <span class="fifo-tag">1st Order</span>
+        <h4>Customer A</h4>
+        <p>Masala Dosa</p>
+        <span class="fifo-pos">Enters at rear</span>
+      </div>
+      <div class="fifo-arrow">&rarr;</div>
+      <div class="fifo-card">
+        <span class="fifo-tag">2nd Order</span>
+        <h4>Customer B</h4>
+        <p>Chicken Biryani</p>
+        <span class="fifo-pos">Enters at rear</span>
+      </div>
+      <div class="fifo-arrow">&rarr;</div>
+      <div class="fifo-card">
+        <span class="fifo-tag">3rd Order</span>
+        <h4>Customer C</h4>
+        <p>Cold Coffee</p>
+        <span class="fifo-pos">Enters at rear</span>
+      </div>
+      <div class="fifo-arrow">&rarr;</div>
+      <div class="fifo-card ready">
+        <span class="fifo-tag">Kitchen</span>
+        <h4>Preparation</h4>
+        <p>Customer A cooks first</p>
+        <span class="fifo-pos">Leaves from front</span>
+      </div>
+    </div>
+
+    <div class="fifo-note">
+      <p><b>front</b> = the index of the order that will be prepared next.
+         <b>rear</b> = the index where the newest order is added.</p>
+      <p><b>enqueue()</b> adds an order at the rear &middot;
+         <b>dequeue()</b> removes the order at the front &middot;
+         both take <b>O(1)</b> time (constant time).</p>
+    </div>
+  </section>
+
+  <!-- ============ TOKEN BOARD ============ -->
+  <section class="section" id="queueBoard">
+    <div class="section-head">
+      <h2>Digital Token Board</h2>
+      <p>Live board outside the canteen &middot; refreshes every 3 seconds</p>
+    </div>
+
+    <div class="board">
+      <div class="board-now">
+        <span class="board-label">Now Preparing</span>
+        <div class="board-tokens" id="boardPreparing">
+          <span class="token-big">--</span>
+        </div>
+      </div>
+      <div class="board-next">
+        <span class="board-label">Serving Next (Queue)</span>
+        <div class="board-tokens" id="boardQueue">
+          <span class="token-chip">Queue empty</span>
+        </div>
+      </div>
+    </div>
+    <p class="board-meta" id="boardMeta">Waiting orders: 0 &middot; Avg. 5 minutes per order</p>
+  </section>
+
+  <!-- ============ TRACK ORDER ============ -->
+  <section class="section track-section" id="track">
+    <div class="section-head">
+      <h2>Track Your Order</h2>
+      <p>Enter the order ID from your receipt</p>
+    </div>
+
+    <div class="track-box">
+      <input type="number" id="trackIdInput" placeholder="Order ID, e.g. 1">
+      <button class="btn btn-primary" id="trackBtn">Track</button>
+    </div>
+
+    <div class="receipt" id="trackResult" hidden>
+      <!-- filled by script.js -->
+    </div>
+  </section>
+
+  <!-- ============ ADMIN DASHBOARD ============ -->
+  <section class="section admin-section" id="admin">
+    <div class="section-head">
+      <h2>Admin Dashboard</h2>
+      <p>Manage the FIFO queue and update order statuses</p>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat waiting"><span id="statWaiting">0</span><p>Waiting in Queue</p></div>
+      <div class="stat preparing"><span id="statPreparing">0</span><p>Preparing</p></div>
+      <div class="stat ready"><span id="statReady">0</span><p>Ready</p></div>
+      <div class="stat completed"><span id="statCompleted">0</span><p>Completed</p></div>
+    </div>
+
+    <h3 class="sub-title">Waiting Queue (FIFO Order)</h3>
+    <div class="queue-list" id="queueList">
+      <p class="empty-msg">No orders waiting right now.</p>
+    </div>
+
+    <h3 class="sub-title">In Kitchen / Ready for Pickup</h3>
+    <div class="queue-list" id="activeList">
+      <p class="empty-msg">No order is being prepared right now.</p>
+    </div>
+
+    <h3 class="sub-title">Food Availability</h3>
+    <div class="availability-list" id="availabilityList">
+      <!-- filled by script.js -->
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div>
+      <h3>Smart<span>Serve</span></h3>
+      <p>Your Campus. Your Cravings. One Smart Order.</p>
+    </div>
+    <div class="footer-info">
+      <p>Canteen opens 8:00 AM &ndash; 6:00 PM</p>
+      <p>Backend: C language + Queue (FIFO) &middot; Frontend: HTML, CSS, JavaScript</p>
+      <p>CSE Mini Project</p>
+    </div>
+  </footer>
+
+  <!-- ============ CART PANEL ============ -->
+  <div class="overlay" id="overlay" hidden></div>
+
+  <aside class="cart-panel" id="cartPanel" aria-label="Shopping cart">
+    <div class="panel-head">
+      <h3>Your Cart</h3>
+      <button class="close-btn" id="closeCartBtn">&times;</button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <p class="empty-msg">Your cart is empty.</p>
+    </div>
+    <div class="cart-summary">
+      <div class="row"><span>Subtotal</span><span id="subtotal">₹0</span></div>
+      <div class="row discount" id="comboRow" hidden><span>Combo saving</span><span id="comboDiscount">&minus;₹15</span></div>
+      <div class="row total"><span>Total</span><span id="cartTotal">₹0</span></div>
+      <p class="wait-hint" id="waitHint">Add items to see waiting time.</p>
+      <button class="btn btn-primary full" id="checkoutBtn">Proceed to Checkout</button>
+    </div>
+  </aside>
+
+  <!-- ============ CHECKOUT MODAL ============ -->
+  <div class="modal" id="checkoutModal" hidden>
+    <div class="modal-box">
+      <div class="panel-head">
+        <h3>Checkout</h3>
+        <button class="close-btn" id="closeCheckoutBtn">&times;</button>
+      </div>
+
+      <div class="checkout-grid">
+        <!-- order summary -->
+        <div class="order-summary">
+          <h4>Order Summary</h4>
+          <div id="checkoutSummary"></div>
+          <div class="row total"><span>Total</span><span id="checkoutTotal">₹0</span></div>
+        </div>
+
+        <!-- customer details form -->
+        <form class="checkout-form" id="checkoutForm" novalidate>
+          <label>Full Name
+            <input type="text" id="custName" placeholder="e.g. Rohith Nishal" maxlength="49">
+            <small class="error" id="errName"></small>
+          </label>
+
+          <label>Student ID / Staff ID
+            <input type="text" id="custId" placeholder="e.g. 21CS045" maxlength="29">
+            <small class="error" id="errId"></small>
+          </label>
+
+          <label>Department
+            <select id="custDept">
+              <option value="">-- select --</option>
+              <option>CSE</option>
+              <option>IT</option>
+              <option>ECE</option>
+              <option>EEE</option>
+              <option>MECH</option>
+              <option>CIVIL</option>
+              <option>BDES</option>
+              <option>Staff</option>
+            </select>
+            <small class="error" id="errDept"></small>
+          </label>
+
+          <label>Mobile Number
+            <input type="text" id="custMobile" placeholder="10 digit number" maxlength="10">
+            <small class="error" id="errMobile"></small>
+          </label>
+
+          <div class="form-row">
+            <label class="radio">
+              <input type="radio" name="orderType" value="Dine-in" checked>
+              Dine-in
+            </label>
+            <label class="radio">
+              <input type="radio" name="orderType" value="Takeaway">
+              Takeaway
+            </label>
+          </div>
+
+          <label id="tableField">Table Number
+            <input type="text" id="custTable" placeholder="e.g. 12" maxlength="9">
+            <small class="error" id="errTable"></small>
+          </label>
+
+          <label>Special Instructions <span class="optional">(optional)</span>
+            <textarea id="custNotes" rows="2" maxlength="119" placeholder="e.g. less spicy, no onion"></textarea>
+          </label>
+
+          <small class="error form-error" id="errForm"></small>
+          <button type="submit" class="btn btn-primary full" id="placeOrderBtn">Place Order</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ORDER CONFIRMATION MODAL ============ -->
+  <div class="modal" id="confirmModal" hidden>
+    <div class="modal-box confirm-box">
+      <div class="confirm-top">
+        <div class="tick">&#10003;</div>
+        <h3>Order Confirmed!</h3>
+        <p>Your token has been added to the FIFO queue.</p>
+      </div>
+
+      <div class="receipt" id="confirmReceipt">
+        <!-- filled by script.js -->
+      </div>
+
+      <div class="confirm-actions">
+        <button class="btn btn-primary" id="goTrackBtn">Track My Order</button>
+        <button class="btn btn-ghost-dark" id="continueBtn">Continue Ordering</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
